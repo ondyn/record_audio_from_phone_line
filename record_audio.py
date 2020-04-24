@@ -77,17 +77,17 @@ def detect_COM_port():
 				set_COM_port_settings(com_port)
 				analog_modem.open()
 			except:
-				print "Unable to open COM Port: " + com_port
+				print ("Unable to open COM Port: " + com_port)
 				pass
 			else:
 				#Try to put Modem in Voice Mode
 				if not exec_AT_cmd("AT+FCLASS=8", "OK"):
-					print "Error: Failed to put modem into voice mode."
+					print ("Error: Failed to put modem into voice mode.")
 					if analog_modem.isOpen():
 						analog_modem.close()
 				else:
 					# Found the COM Port exit the loop
-					print "Modem COM Port is: " + com_port
+					print ("Modem COM Port is: " + com_port)
 					analog_modem.flushInput()
 					analog_modem.flushOutput()
 					break
@@ -104,7 +104,7 @@ def init_modem_settings():
 	try:
 		detect_COM_port()
 	except:
-		print "Error: Unable to open the Serial Port."
+		print ("Error: Unable to open the Serial Port.")
 		sys.exit()
 
 	# Initialize the Modem
@@ -115,30 +115,30 @@ def init_modem_settings():
 
 		# Test Modem connection, using basic AT command.
 		if not exec_AT_cmd("AT"):
-			print "Error: Unable to access the Modem"
+			print ("Error: Unable to access the Modem")
 
 		# reset to factory default.
 		if not exec_AT_cmd("ATZ3"):
-			print "Error: Unable reset to factory default"			
+			print ("Error: Unable reset to factory default")
 			
 		# Display result codes in verbose form 	
 		if not exec_AT_cmd("ATV1"):
-			print "Error: Unable set response in verbose form"	
+			print ("Error: Unable set response in verbose form")
 
 		# Enable Command Echo Mode.
 		if not exec_AT_cmd("ATE1"):
-			print "Error: Failed to enable Command Echo Mode"		
+			print ("Error: Failed to enable Command Echo Mode")
 
 		# Enable formatted caller report.
 		if not exec_AT_cmd("AT+VCID=1"):
-			print "Error: Failed to enable formatted caller report."
+			print ("Error: Failed to enable formatted caller report.")
 			
 		# Flush any existing input outout data from the buffers
 		analog_modem.flushInput()
 		analog_modem.flushOutput()
 
 	except:
-		print "Error: unable to Initialize the Modem"
+		print ("Error: unable to Initialize the Modem")
 		sys.exit()
 #=================================================================
 
@@ -176,7 +176,7 @@ def reset_USB_Device():
 	fd = os.open(dev_path, os.O_WRONLY)
 	try:
 		fcntl.ioctl(fd, USBDEVFS_RESET, 0)
-		print "Modem reset successful"
+		print ("Modem reset successful")
 	finally:
 		os.close(fd)
 
@@ -205,7 +205,7 @@ def exec_AT_cmd(modem_AT_cmd, expected_response="OK"):
 
 	except:
 		disable_modem_event_listener = False
-		print "Error: Failed to execute the command"
+		print ("Error: Failed to execute the command")
 		return False		
 #=================================================================
 
@@ -223,7 +223,7 @@ def read_AT_cmd_response(expected_response="OK"):
 		while 1:
 			# Read Modem Data on Serial Rx Pin
 			modem_response = analog_modem.readline()
-			print modem_response
+			print (modem_response)
 			# Recieved expected Response
 			if expected_response == modem_response.strip(' \t\n\r' + chr(16)):
 				return True
@@ -235,7 +235,7 @@ def read_AT_cmd_response(expected_response="OK"):
 				return False
 
 	except:
-		print "Error in read_modem_response function..."
+		print ("Error in read_modem_response function...")
 		return False
 #=================================================================
 
@@ -275,49 +275,49 @@ def dtmf_digits(modem_data):
 # Record wav file (Voice Msg/Mail)
 #=================================================================
 def record_audio():
-	print "Record Audio Msg - Start"
+	print ("Record Audio Msg - Start")
 
 	# Enter Voice Mode
 	if not exec_AT_cmd("AT+FCLASS=8","OK"):
-		print "Error: Failed to put modem into voice mode."
+		print ("Error: Failed to put modem into voice mode.")
 		return
 
 	# Set speaker volume to normal
 	if not exec_AT_cmd("AT+VGT=128","OK"):
-		print "Error: Failed to set speaker volume to normal."
+		print ("Error: Failed to set speaker volume to normal.")
 		return
 
 	# Compression Method and Sampling Rate Specifications
 	# Compression Method: 8-bit linear / Sampling Rate: 8000MHz
 	if not exec_AT_cmd("AT+VSM=128,8000","OK"):
-		print "Error: Failed to set compression method and sampling rate specifications."
+		print ("Error: Failed to set compression method and sampling rate specifications.")
 		return
 
 	# Disables silence detection (Value: 0)
 	if not exec_AT_cmd("AT+VSD=128,0","OK"):
-		print "Error: Failed to disable silence detection."
+		print ("Error: Failed to disable silence detection.")
 		return
 
 	# Put modem into TAD Mode
 	if not exec_AT_cmd("AT+VLS=1","OK"):
-		print "Error: Unable put modem into TAD mode."
+		print ("Error: Unable put modem into TAD mode.")
 		return
 
 	# Enable silence detection.
 	# Select normal silence detection sensitivity 
 	# and a silence detection interval of 5 s. 
 	if not exec_AT_cmd("AT+VSD=128,50","OK"):
-		print "Error: Failed tp enable silence detection."
+		print ("Error: Failed tp enable silence detection.")
 		return
 
 	# Play beep.
 	if not exec_AT_cmd("AT+VTS=[933,900,100]","OK"):
-		print "Error: Failed to play 1.2 second beep."
+		print ("Error: Failed to play 1.2 second beep.")
 		#return
 
 	# Select voice receive mode
 	if not exec_AT_cmd("AT+VRX","CONNECT"):
-		print "Error: Unable put modem into voice receive mode."
+		print ("Error: Unable put modem into voice receive mode.")
 		return
 
 	# Record Audio File
@@ -337,22 +337,22 @@ def record_audio():
 
 		# Check if <DLE>b is in the stream
 		if ((chr(16)+chr(98)) in audio_data):
-			print "Busy Tone... Call will be disconnected."
+			print ("Busy Tone... Call will be disconnected.")
 			break
 
 		# Check if <DLE>s is in the stream
 		if ((chr(16)+chr(115)) in audio_data):
-			print "Silence Detected... Call will be disconnected."
+			print ("Silence Detected... Call will be disconnected.")
 			break
 
 		# Check if <DLE><ETX> is in the stream
 		if (("<DLE><ETX>").encode() in audio_data):
-			print "<DLE><ETX> Char Recieved... Call will be disconnected."
+			print ("<DLE><ETX> Char Recieved... Call will be disconnected.")
 			break
 
 		# Timeout
 		elif ((datetime.now()-start_time).seconds) > REC_VM_MAX_DURATION:
-			print "Timeout - Max recording limit reached."
+			print ("Timeout - Max recording limit reached.")
 			break
 
 		# Add Audio Data to Audio Buffer
@@ -374,16 +374,16 @@ def record_audio():
 
 	# Send End of Voice Recieve state by passing "<DLE>!"
 	if not exec_AT_cmd((chr(16)+chr(33)),"OK"):
-		print "Error: Unable to signal end of voice receive state"
+		print ("Error: Unable to signal end of voice receive state")
 
 	# Hangup the Call
 	if not exec_AT_cmd("ATH","OK"):
-		print "Error: Unable to hang-up the call"
+		print ("Error: Unable to hang-up the call")
 
 	# Enable global event listener
 	disable_modem_event_listener = False
 
-	print "Record Audio Msg - END"
+	print ("Record Audio Msg - END")
 	return
 
 #=================================================================
@@ -406,31 +406,31 @@ def read_data():
 
 		
 			if modem_data != "":
-				print modem_data
+				print (modem_data)
 
 				# Check if <DLE>b is in the stream
 				if (chr(16)+chr(98)) in modem_data:
 					#Terminate the call
 					if not exec_AT_cmd("ATH"):
-						print "Error: Busy Tone - Failed to terminate the call"
-						print "Trying to revoer the serial port"
+						print ("Error: Busy Tone - Failed to terminate the call")
+						print ("Trying to revoer the serial port")
 						recover_from_error()
 					else:
-						print "Busy Tone: Call Terminated"
+						print ("Busy Tone: Call Terminated")
 				
 				# Check if <DLE>s is in the stream
 				if (chr(16)+chr(115)) == modem_data:
 					#Terminate the call
 					if not exec_AT_cmd("ATH"):
-						print "Error: Silence - Failed to terminate the call"
-						print "Trying to revoer the serial port"
+						print ("Error: Silence - Failed to terminate the call")
+						print ("Trying to revoer the serial port")
 						recover_from_error()
 					else:
-						print "Silence: Call Terminated"
+						print ("Silence: Call Terminated")
 
 
 				if ("-s".encode() in modem_data) or (("<DLE>-s").encode() in modem_data):
-					print "silence found during recording"
+					print ("silence found during recording")
 					analog_modem.write(("<DLE>-!" + "\r").encode())
 
 
@@ -479,7 +479,7 @@ def close_modem_port():
 			analog_modem.close()
 			print ("Serial Port closed...")
 	except:
-		print "Error: Unable to close the Serial Port."
+		print ("Error: Unable to close the Serial Port.")
 		sys.exit()
 #=================================================================
 
